@@ -19,7 +19,7 @@ export default function ListView() {
   const [minExp, setMinExp] = useState<number | ''>('');
   const [maxWeight, setMaxWeight] = useState<number | ''>('');
 
-  // All unique types (for filter chips)
+  // Unique types for chips
   const allTypes: string[] = useMemo(() => {
     const s = new Set<string>();
     all.forEach((p: PokemonDetail) => p.types.forEach((t) => s.add(t.type.name)));
@@ -33,8 +33,10 @@ export default function ListView() {
     const needle = q.trim().toLowerCase();
 
     let res = all
-      // search by name
-      .filter((p: PokemonDetail) => p.name.toLowerCase().includes(needle))
+      // 🔑 PREFIX-ONLY SEARCH
+      .filter((p: PokemonDetail) =>
+        needle === '' ? true : p.name.toLowerCase().startsWith(needle)
+      )
       // type filter (all selected types must be present)
       .filter((p: PokemonDetail) =>
         activeTypes.length === 0
@@ -46,7 +48,7 @@ export default function ListView() {
       // max weight
       .filter((p: PokemonDetail) => (maxWeight === '' ? true : p.weight <= maxWeight));
 
-    // sort
+    // sort by chosen key/direction
     res.sort((a: PokemonDetail, b: PokemonDetail) => {
       const A = sortKey === 'name' ? a.name : a.base_experience;
       const B = sortKey === 'name' ? b.name : b.base_experience;
@@ -57,7 +59,7 @@ export default function ListView() {
     return res;
   }, [all, q, activeTypes, minExp, maxWeight, sortKey, dir]);
 
-  // Keep collection order for DetailView prev/next cycling
+  // Preserve current order for DetailView prev/next
   useEffect(() => {
     setActiveCollection(filtered.map((p: PokemonDetail) => p.name));
   }, [filtered, setActiveCollection]);
@@ -75,7 +77,7 @@ export default function ListView() {
         <SortControls sortKey={sortKey} setSortKey={setSortKey} dir={dir} setDir={setDir} />
       </div>
 
-      {/* Extra filters: Type, Min Base Exp, Max Weight */}
+      {/* Filters: Types, Min Base Exp, Max Weight */}
       <div className="toolbar">
         <TypeFilters allTypes={allTypes} active={activeTypes} toggle={toggleType} />
         <div className="row">
